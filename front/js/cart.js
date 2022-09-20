@@ -1,4 +1,5 @@
 'use strict';
+// function for existing product index. 
 
 const apiUrl = new URL('http://localhost:3000/api/products');
 const apiPostUrl = new URL('http://localhost:3000/api/products/order');
@@ -12,8 +13,7 @@ const key = 'basket';
 let productsArray = JSON.parse(localStorage.getItem(key));
 
 // first set the total amounts
-totalPrice.textContent = updateTotalSum(productsArray);
-totalQuantity.textContent = updateTotalArticleSum(productsArray)
+updateTotal(productsArray, totalPrice, totalQuantity)
 
 
 
@@ -55,26 +55,17 @@ inputValue.forEach(function(elem){
     elem.addEventListener('change', function(event){
         event.preventDefault();
         
-        // we retrieve the ID and color of the product modified 
-        let productContainer = elem.closest('article.cart__item');
-        let productId = productContainer.dataset.id;
-        let productColor = productContainer.dataset.color;
-
-        // from that, we retrieve the index it holds inside the array
-        let existingProductIndex = productsArray.findIndex((product) =>
-            product.id == productId && 
-            product.colors == productColor
-        )
+        let existingProductIndex = getProductIdentifier(elem)
 
         // we then replace the product by an updated one
         productsArray.splice(
             existingProductIndex, 1, updateQuantity(productsArray[existingProductIndex], +this.value)
             )
         
-        // send back the updated basket 
+        // send back the updated basket FUNCTION
         localStorage.setItem(key, JSON.stringify(productsArray))
-        totalPrice.textContent = updateTotalSum(productsArray);
-        totalQuantity.textContent = updateTotalArticleSum(productsArray)
+        // updates quantity and sum when changes occurs
+        updateTotal(productsArray, totalPrice, totalQuantity)
     });
 
 })
@@ -90,27 +81,34 @@ deleteButton.forEach(function(elem){
         // make sure the user clicked on delete button on purpose
         let confirmDeletion = confirm('You are about to delete this product. Are you sure ?');
         if (confirmDeletion){
-            // if confirmed, we retrieve the ID and color of the product to be deleted
-            let productContainer = elem.closest('article.cart__item');
-            let productId = productContainer.dataset.id;
-            let productColor = productContainer.dataset.color;
-
-            // we get its index within the array
-            let existingProductIndex = productsArray.findIndex((product) =>
-                product.id == productId && 
-                product.colors == productColor
-            )
+            let existingProductIndex = getProductIdentifier(elem)
 
             // array.splice takes out the product 
             // we update the basket and remove the node from the page
             productsArray.splice(existingProductIndex, 1)
             localStorage.setItem(key, JSON.stringify(productsArray))
             elem.closest('article.cart__item').remove()
+
+            // updates quantity and sum when changes occurs
+            updateTotal(productsArray, totalPrice, totalQuantity)
         } 
-        totalPrice.textContent = updateTotalSum(productsArray);
-        totalQuantity.textContent = updateTotalArticleSum(productsArray)
     })
 })
+
+function getProductIdentifier(htmlElem){
+    // we retrieve the ID and color of the product modified
+    let productContainer = htmlElem.closest('article.cart__item');
+    let productId = productContainer.dataset.id;
+    let productColor = productContainer.dataset.color;
+    
+    // from that, we retrieve the index it holds inside the array
+    let existingProductIndex = productsArray.findIndex((product) =>
+    product.id == productId && 
+    product.colors == productColor
+    )
+    
+    return existingProductIndex;
+}
 
 function updateQuantity(productObj, quantity){
     // add controls over value of quantity
@@ -122,6 +120,11 @@ function updateQuantity(productObj, quantity){
         productObj['quantity'] = quantity;
     }
     return productObj;
+}
+
+function updateTotal(productArray, priceHtmlElem, quantityHtmlElem){
+    priceHtmlElem.textContent = updateTotalSum(productArray);
+    quantityHtmlElem.textContent = updateTotalArticleSum(productArray)
 }
 
 function updateTotalSum(productsArray){
@@ -152,19 +155,19 @@ let userForm = document.querySelector('form');
 userForm.addEventListener('change', function(event){
     switch(event.target){
         case firstName:
-            checkFirstName(firstName.value.trim().toLowerCase());
+            checkFirstName(firstName.value.trim().toLowerCase(), event.target);
             break;
         case lastName:
-            checkLastName(lastName.value.trim().toLowerCase());
+            checkLastName(lastName.value.trim().toLowerCase(), event.target);
             break;
         case address:
-            checkAddress(address.value.trim().toLowerCase());
+            checkAddress(address.value.trim().toLowerCase(), event.target);
             break;
         case city:
-            checkCity(city.value.trim().toLowerCase())
+            checkCity(city.value.trim().toLowerCase(), event.target)
             break;
         case email:
-            checkEmail(email.value.trim().toLowerCase());
+            checkEmail(email.value.trim().toLowerCase(), event.target);
             break;
         default:
             console.log('Something else was changed');
@@ -172,65 +175,65 @@ userForm.addEventListener('change', function(event){
     }
 })
 
-function checkFirstName(userInput){
-    let regexp = /^([a-z]+)([-\s]?[a-z]+)?$/gi;
+function checkFirstName(userInput, eventTarget){
+    let regexp = /^([a-z\p{L}]+)([-\s]?[a-z\p{L}]+)?$/gui;
     let userName = userInput.match(regexp);
     if (userName){
         // if inputs checks out, save it to userData object
         userData["firstName"] = userName[0];
-        event.target.nextElementSibling.textContent = '';
+        eventTarget.nextElementSibling.textContent = '';
     } else {
         // if error, reset input value and show error message
-        event.target.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
+        eventTarget.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
     }
 }
-function checkLastName(userInput){
-    let regexp = /^([a-z]+)([-'\s]?[a-z]+){0,4}$/gi;
+function checkLastName(userInput, eventTarget){
+    let regexp = /^([a-z\p{L}]+)([-'\s]?[a-z\p{L}]+){0,4}$/gui;
     let userLastName = userInput.match(regexp);
     if (userLastName){
         // if inputs checks out, save it to userData object
         userData["lastName"] = userLastName[0];
-        event.target.nextElementSibling.textContent = '';
+        eventTarget.nextElementSibling.textContent = '';
     } else {
         // if error, reset input value and show error message
-        event.target.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
+        eventTarget.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
     }
 }
-function checkAddress(userInput){
-    let regexp = /^[\d]{1,3}\s?(bis)?\s(rue|boulevard|bd|avenue|allée|allee)\s([-\w\s\d]+)$/gi;
+function checkAddress(userInput, eventTarget){
+    let regexp = /^[\d]{1,3}\s?(bis)?\s(rue|boulevard|bd|avenue|allée|allee)\s([-\w\s\d\p{L}]+)$/gui;
     let userAddress = userInput.match(regexp);
     if (userAddress){
         // if inputs checks out, save it to userData object
         userData["address"] = userAddress[0];
-        event.target.nextElementSibling.textContent = '';
+        eventTarget.nextElementSibling.textContent = '';
     } else {
         // if error, reset input value and show error message
-        event.target.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
+        eventTarget.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
     }
 }
-function checkCity(userInput){
-    let regexp = /^[a-z]+([-a-z]+){0,4}$/
+function checkCity(userInput, eventTarget){
+    let regexp = /^[a-z\p{L}]+([-a-z\p{L}]+){0,4}$/u;
     let userCity = userInput.match(regexp);
     if (userCity){
         // if inputs checks out, save it to userData object
         userData["city"] = userCity[0];
-        event.target.nextElementSibling.textContent = '';
+        eventTarget.nextElementSibling.textContent = '';
     } else {
         // if error, reset input value and show error message
-        event.target.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
+        eventTarget.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
     }
 }
-function checkEmail(userInput){
-    let regexp = /^([\w.-]+)@[a-z]+\.[a-z]+(\.[a-z]+){0,2}$/gi;
+function checkEmail(userInput, eventTarget){
+    let regexp = /^([\w.-_]+)@[a-z]+\.[a-z]+(\.[a-z]+){0,2}$/gi;
     // let regexp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
     let userEmail = userInput.match(regexp);
     if (userEmail){
         // if inputs checks out, save it to userData object
         userData["email"] = userEmail[0];
-        event.target.nextElementSibling.textContent = '';
+        eventTarget.nextElementSibling.textContent = '';
     } else {
         // if error, reset input value and show error message
-        event.target.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
+        eventTarget.nextElementSibling.textContent = 'Something went wrong here. Might check your input again'
     }
 }
 
@@ -249,19 +252,6 @@ order.addEventListener('click', function(event){
     }
 })
 
-/**
- *
- * Expects request to contain:
- * contact: {
- *   firstName: string,
- *   lastName: string,
- *   address: string,
- *   city: string,
- *   email: string
- * }
- * products: [string] <-- array of product _id
- *
- */
 
 async function sendData(){
     let order = {
@@ -279,6 +269,7 @@ async function sendData(){
         });
     let response = await request.json();
     window.location.href = createRedirectUrl(response.orderId)
+    localStorage.clear();
 }
 
 function createRedirectUrl(orderId){
