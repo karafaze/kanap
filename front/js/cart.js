@@ -13,7 +13,9 @@ const key = 'basket';
 let productsArray = JSON.parse(localStorage.getItem(key));
 
 // first set the total amounts
-updateTotal(productsArray, totalPrice, totalQuantity)
+if (productsArray != null && productsArray.length > 0){
+    updateTotal(productsArray, totalPrice, totalQuantity)
+}
 
 
 
@@ -246,7 +248,11 @@ order.addEventListener('click', function(event){
         userData.hasOwnProperty('city') &&
         userData.hasOwnProperty('email')){
             productIds = productsArray.map((product) => product.id);
-            sendData();
+            if (productIds.length > 0){
+                sendData()
+            } else {
+                alert('You need items in your basket to make a order.')
+            }
     } else {
         console.log('You are missing info')
     }
