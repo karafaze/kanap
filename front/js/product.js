@@ -62,7 +62,6 @@ function newProductEntry(){
     product['title'] = title.textContent;
     product['imgUrl'] = document.querySelector('.item__img > img').src;
     product['imgAlt'] = document.querySelector('.item__img > img').alt;
-    // product['price'] = price.textContent;
     return product;
 }
 
