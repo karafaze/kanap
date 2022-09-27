@@ -6,51 +6,52 @@ const productId = currentUrl.searchParams.get('id');
 
 getData();
 
-
-addToCart.addEventListener('click', function(event){
-    event.preventDefault();
-    const storageKey = 'basket';
-    // checking firsts the user inputs
-    if (!(quantity.value > 0 && quantity.value <= 100)){
-        alert('Please indicate a quantity between 1 and 100.')
-    } else if (colors.value == ''){
-        alert('Please choose a color for the model')
-    } else if (localStorage.length > 0){
-        // we only enter here if we already at least 1 product stored
-
-        // retrieve array of products objects from localStorage
-        let productsArray = JSON.parse(localStorage.getItem(storageKey));
-
-        // retrive index of product we are updating
-        let existingProductIndex = productsArray.findIndex((product) =>
-            product.title == title.textContent && 
-            product.colors == colors.options[colors.selectedIndex].text
-        )
-        // if product index is equal or above 0
-        if (existingProductIndex >= 0){
-            // make sure the user really want to add more of this item
-            let confirmDecision = confirm(`You already have this item in your basket?\nDo you wish to modify quantity ?`);
-            if (confirmDecision){
-                // make a copy of that product object
-                let productToUpdate = productsArray[existingProductIndex]
-                // replace it from a 'quantity updated' product in the array
-                productsArray.splice(existingProductIndex, 1, checkQuantity(productToUpdate))
+function addCardListener(){
+    addToCart.addEventListener('click', function(event){
+        event.preventDefault();
+        const storageKey = 'basket';
+        // checking firsts the user inputs
+        if (!(quantity.value > 0 && quantity.value <= 100)){
+            alert('Please indicate a quantity between 1 and 100.')
+        } else if (colors.value == ''){
+            alert('Please choose a color for the model')
+        } else if (localStorage.getItem(storageKey)?.length > 0){
+            // we only enter here if we already at least 1 product stored
+    
+            // retrieve array of products objects from localStorage
+            let productsArray = JSON.parse(localStorage.getItem(storageKey)) ;
+    
+            // retrive index of product we are updating
+            let existingProductIndex = productsArray.findIndex((product) =>
+                product.title == title.textContent && 
+                product.colors == colors.options[colors.selectedIndex].text
+            )
+            // if product index is equal or above 0
+            if (existingProductIndex >= 0){
+                // make sure the user really want to add more of this item
+                let confirmDecision = confirm(`You already have this item in your basket?\nDo you wish to modify quantity ?`);
+                if (confirmDecision){
+                    // make a copy of that product object
+                    let productToUpdate = productsArray[existingProductIndex]
+                    // replace it from a 'quantity updated' product in the array
+                    productsArray.splice(existingProductIndex, 1, checkQuantity(productToUpdate))
+                    localStorage.setItem(storageKey, JSON.stringify(productsArray))
+                }
+            } else {
+                // if product index is -1 it means it is not yet in the basket
+                // so we add a new entry in the basket storage
+                productsArray.push(newProductEntry());
                 localStorage.setItem(storageKey, JSON.stringify(productsArray))
             }
         } else {
-            // if product index is -1 it means it is not yet in the basket
-            // so we add a new entry in the basket storage
-            productsArray.push(newProductEntry());
+            // basket is empty so we create one
+            let productsArray = [];
+            let newProduct = newProductEntry()
+            productsArray.push(newProduct)
             localStorage.setItem(storageKey, JSON.stringify(productsArray))
         }
-    } else {
-        // basket is empty so we create one
-        let productsArray = [];
-        let newProduct = newProductEntry()
-        productsArray.push(newProduct)
-        localStorage.setItem(storageKey, JSON.stringify(productsArray))
-    }
-})
+    })
+}
 
 function newProductEntry(){
     // function to create a product object
@@ -91,6 +92,7 @@ async function getData(){
     insertPrice(productDetail.price);
     insertProductDescription(productDetail.description)
     insertProductColors(productDetail.colors)
+    addCardListener();
 }
 
 function insertProductName(name){
